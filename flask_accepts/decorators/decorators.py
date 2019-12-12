@@ -85,7 +85,15 @@ def accepts(
             # Handle Marshmallow schema
             if schema:
                 try:
-                    obj = schema.load(request.get_json())
+                    content_type = request.headers['content-type']
+                    if 'form' in content_type:
+                        data = {**request.values, **request.files}
+                    elif 'json' in content_type:
+                        data = request.json
+                    else:
+                        raise NotImplementedError('Only json and form(multipart or urlencoded) Supported')
+                    obj = schema.load(data)
+                    # obj = schema.load(request.get_json())
                     request.parsed_obj = obj
                 except ValidationError as ex:
                     schema_error = ex.messages
